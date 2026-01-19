@@ -63,8 +63,8 @@ router.post("/", (req, res) => {
   if (!item) return res.status(400).json({ error: "Product not found" });
 
   item.stock += quantity;
-  if (item.stock < 0)
-    return res.status(400).json({ error: "Insufficient stock" });
+  // if (item.stock < 0)
+  //   return res.status(400).json({ error: "Insufficient stock" });
 
   transactions.push({
     transaction_id: uuidv4(),

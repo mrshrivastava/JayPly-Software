@@ -7,6 +7,8 @@ import Stocks from "./pages/Stocks";
 import Transactions from "./pages/Transactions";
 import Navbar from "./components/Navbar";
 import Analytics from "./pages/Analytics";
+import Settings from "./pages/Settings";
+import AddCategory from "./pages/AddCategory";
 
 const PrivateRoute = ({ children }) =>
   localStorage.getItem("token") ? children : <Navigate to="/login" />;
@@ -21,7 +23,8 @@ export default function App() {
         <Route path="/stocks/:type" element={<PrivateRoute><Stocks /></PrivateRoute>} />
         <Route path="/transactions" element={<PrivateRoute><Transactions /></PrivateRoute>} />
         <Route path="/analytics" element={<PrivateRoute><Analytics /></PrivateRoute>} />
-
+        <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
+        <Route path="/settings/categories" element={<PrivateRoute><AddCategory /></PrivateRoute>} />
       </Routes>
     </>
   );

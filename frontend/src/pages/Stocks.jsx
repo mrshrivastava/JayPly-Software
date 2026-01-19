@@ -82,9 +82,23 @@ export default function Stocks() {
     <div className="pt-20 px-4 md:px-6 bg-gray-100 min-h-screen">
 
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold capitalize">{type} Stock</h1>
-        <p className="text-gray-600">Manage inventory items</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+        <div>
+          <h1 className="text-2xl font-bold capitalize">{type} Stock</h1>
+          <p className="text-gray-600">Manage inventory items</p>
+        </div>
+
+        <button
+          onClick={() =>
+            window.open(
+              `${import.meta.env.VITE_API_URL}/download/stocks`,
+              "_blank"
+            )
+          }
+          className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-900 w-full sm:w-auto"
+        >
+          Download Stocks Excel
+        </button>
       </div>
 
       {/* Message */}

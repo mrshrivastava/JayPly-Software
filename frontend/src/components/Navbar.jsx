@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { CategoryContext } from "../context/CategoryContext";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { categories } = useContext(CategoryContext);
 
   const logout = () => {
     localStorage.clear();
@@ -12,7 +14,10 @@ export default function Navbar() {
   };
 
   const NavItem = ({ to, label, onClick }) => {
-    const active = location.pathname === to || location.pathname.startsWith(to);
+    const active =
+      location.pathname === to ||
+      (to.startsWith("/stocks") && location.pathname.startsWith(to));
+
     return (
       <Link
         to={to}
@@ -47,11 +52,20 @@ export default function Navbar() {
         {/* Desktop Menu */}
         <nav className="hidden md:flex items-center gap-2">
           <NavItem to="/" label="Dashboard" />
-          <NavItem to="/stocks/doors" label="Doors" />
-          <NavItem to="/stocks/plywood" label="Plywood" />
-          <NavItem to="/stocks/sunmica" label="Sunmica" />
+
+          {/* Dynamic Categories */}
+          {categories.map(cat => (
+            <NavItem
+              key={cat.id}
+              to={`/stocks/${cat.id}`}
+              label={cat.name}
+            />
+          ))}
+
           <NavItem to="/transactions" label="Transactions" />
           <NavItem to="/analytics" label="Analytics" />
+          <NavItem to="/settings" label="Settings" />
+          <NavItem to="/settings/categories" label="Categories" />
 
 
           <button
@@ -76,10 +90,32 @@ export default function Navbar() {
         <div className="md:hidden bg-gray-800 border-t border-gray-700">
           <div className="px-2 py-2 space-y-1">
             <NavItem to="/" label="Dashboard" onClick={() => setOpen(false)} />
-            <NavItem to="/stocks/doors" label="Doors" onClick={() => setOpen(false)} />
-            <NavItem to="/stocks/plywood" label="Plywood" onClick={() => setOpen(false)} />
-            <NavItem to="/stocks/sunmica" label="Sunmica" onClick={() => setOpen(false)} />
-            <NavItem to="/transactions" label="Transactions" onClick={() => setOpen(false)} />
+
+            {/* Dynamic Categories (Mobile) */}
+            {categories.map(cat => (
+              <NavItem
+                key={cat.id}
+                to={`/stocks/${cat.id}`}
+                label={cat.name}
+                onClick={() => setOpen(false)}
+              />
+            ))}
+
+            <NavItem
+              to="/transactions"
+              label="Transactions"
+              onClick={() => setOpen(false)}
+            />
+            <NavItem
+              to="/analytics"
+              label="Analytics"
+              onClick={() => setOpen(false)}
+            />
+            <NavItem
+              to="/settings"
+              label="Settings"
+              onClick={() => setOpen(false)}
+            />
 
             <button
               onClick={logout}

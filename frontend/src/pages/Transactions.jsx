@@ -1,9 +1,17 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useContext
+} from "react";
 import api from "../services/api";
+import { CategoryContext } from "../context/CategoryContext";
 
 const LIMIT = 20;
 
 export default function Transactions() {
+  const { categories } = useContext(CategoryContext);
+
   const [transactions, setTransactions] = useState([]);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -14,7 +22,7 @@ export default function Transactions() {
   const [endDate, setEndDate] = useState("");
 
   // New transaction form
-  const [productType, setProductType] = useState("doors");
+  const [productType, setProductType] = useState("");
   const [productList, setProductList] = useState([]);
   const [productId, setProductId] = useState("");
   const [quantity, setQuantity] = useState("");
@@ -25,8 +33,17 @@ export default function Transactions() {
 
   const loaderRef = useRef(null);
 
+  /* ================= INIT CATEGORY ================= */
+  useEffect(() => {
+    if (categories.length && !productType) {
+      setProductType(categories[0].id);
+    }
+  }, [categories]);
+
   /* ================= LOAD PRODUCT LIST ================= */
   useEffect(() => {
+    if (!productType) return;
+
     api.get(`/stocks/${productType}`).then(res => {
       setProductList(res.data || []);
     });
@@ -83,8 +100,8 @@ export default function Transactions() {
 
   /* ================= ADD TRANSACTION ================= */
   const addTransaction = async () => {
-    if (!productId || !quantity) {
-      alert("Please select product and quantity");
+    if (!productType || !productId || !quantity) {
+      alert("Please select category, product and quantity");
       return;
     }
 
@@ -94,7 +111,6 @@ export default function Transactions() {
       quantity: Number(quantity),
     });
 
-    // Reset
     setQuantity("");
     setProductId("");
     setProductSearch("");
@@ -117,11 +133,33 @@ export default function Transactions() {
     loadTransactions(true);
   };
 
+  if (!categories.length) {
+    return (
+      <div className="pt-20 text-center text-gray-500">
+        Loading categories...
+      </div>
+    );
+  }
+
   return (
     <div className="pt-20 px-4 md:px-6 bg-gray-100 min-h-screen">
-      <h1 className="text-2xl font-bold mb-6">Transactions</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+        <h1 className="text-2xl font-bold">Transactions</h1>
 
-      {/* ================= ADD TRANSACTION ================= */}
+        <button
+          onClick={() =>
+            window.open(
+              `${import.meta.env.VITE_API_URL}/download/transactions`,
+              "_blank"
+            )
+          }
+          className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-900 w-full sm:w-auto"
+        >
+          Download Transactions Excel
+        </button>
+      </div>
+
+      {/* ADD TRANSACTION */}
       <div className="bg-white p-6 rounded shadow mb-6">
         <h2 className="font-semibold mb-4">New Transaction</h2>
 
@@ -137,12 +175,14 @@ export default function Transactions() {
               setShowProductList(false);
             }}
           >
-            <option value="doors">Doors</option>
-            <option value="plywood">Plywood</option>
-            <option value="sunmica">Sunmica</option>
+            {categories.map(cat => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
           </select>
 
-          {/* Searchable Product Dropdown */}
+          {/* Searchable Product */}
           <div className="relative">
             <input
               type="text"
@@ -161,9 +201,7 @@ export default function Transactions() {
               <div className="absolute z-20 bg-white border rounded w-full max-h-48 overflow-y-auto shadow mt-1">
                 {productList
                   .filter(p =>
-                    p.id
-                      .toLowerCase()
-                      .includes(productSearch.toLowerCase())
+                    p.id.toLowerCase().includes(productSearch.toLowerCase())
                   )
                   .map(p => (
                     <div
@@ -180,9 +218,7 @@ export default function Transactions() {
                   ))}
 
                 {productList.filter(p =>
-                  p.id
-                    .toLowerCase()
-                    .includes(productSearch.toLowerCase())
+                  p.id.toLowerCase().includes(productSearch.toLowerCase())
                 ).length === 0 && (
                   <div className="px-3 py-2 text-sm text-gray-500">
                     No matching products
@@ -201,7 +237,6 @@ export default function Transactions() {
             onChange={e => setQuantity(e.target.value)}
           />
 
-          {/* Add */}
           <button
             onClick={addTransaction}
             className="bg-[#8B5A2B] text-white rounded px-4 py-2 hover:bg-[#734822]"
@@ -211,61 +246,36 @@ export default function Transactions() {
         </div>
       </div>
 
-      {/* ================= DATE FILTER ================= */}
-      <div className="bg-white p-6 rounded shadow mb-6">
-        <h2 className="font-semibold mb-4">Filter by Date</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <input
-            type="date"
-            className="border rounded px-3 py-2"
-            value={startDate}
-            onChange={e => setStartDate(e.target.value)}
-          />
-          <input
-            type="date"
-            className="border rounded px-3 py-2"
-            value={endDate}
-            onChange={e => setEndDate(e.target.value)}
-          />
-          <button
-            onClick={applyDateFilter}
-            className="bg-gray-800 text-white rounded px-4 py-2"
-          >
-            Apply
-          </button>
-        </div>
-      </div>
-
-      {/* ================= TABLE ================= */}
+      {/* TABLE */}
       <div className="bg-white rounded shadow overflow-x-auto">
-        {/* <table className="min-w-full text-sm">
+        <table className="min-w-full table-fixed text-sm">
           <thead className="bg-gray-100">
             <tr>
-              <th className="px-4 py-3 text-left">Date</th>
-              <th className="px-4 py-3">Product</th>
-              <th className="px-4 py-3">Product ID</th>
-              <th className="px-4 py-3">Qty</th>
-              <th className="px-4 py-3">Remaining</th>
-              <th className="px-4 py-3 text-right">Action</th>
+              <th className="w-[120px] px-4 py-3 text-left">Date</th>
+              <th className="w-[120px] px-4 py-3 text-left">Category</th>
+              <th className="w-[140px] px-4 py-3 text-left">Product ID</th>
+              <th className="w-[100px] px-4 py-3 text-right">Qty</th>
+              <th className="w-[120px] px-4 py-3 text-right">Remaining</th>
+              <th className="w-[100px] px-4 py-3 text-right">Action</th>
             </tr>
           </thead>
+
           <tbody>
             {transactions.map(tx => (
               <tr key={tx.transaction_id} className="border-t">
                 <td className="px-4 py-3">
-                  {new Date(tx.date).toLocaleDateString()}
+                  {new Date(tx.date).toLocaleDateString("en-GB")}
                 </td>
                 <td className="px-4 py-3 capitalize">{tx.product}</td>
-                <td className="px-4 py-3">{tx.product_id}</td>
+                <td className="px-4 py-3 font-mono">{tx.product_id}</td>
                 <td
-                  className={`px-4 py-3 font-semibold ${
-                    tx.quantity > 0 ? "text-green-600" : "text-red-600"
+                  className={`px-4 py-3 text-right font-semibold ${
+                    tx.quantity < 0 ? "text-red-600" : "text-green-600"
                   }`}
                 >
                   {tx.quantity}
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 text-right">
                   {tx.remaining_product_stock}
                 </td>
                 <td className="px-4 py-3 text-right">
@@ -279,62 +289,8 @@ export default function Transactions() {
               </tr>
             ))}
           </tbody>
-        </table> */}
+        </table>
 
-        <table className="min-w-full table-fixed text-sm">
-  <thead className="bg-gray-100">
-    <tr>
-      <th className="w-[120px] px-4 py-3 text-left">Date</th>
-      <th className="w-[120px] px-4 py-3 text-left">Product</th>
-      <th className="w-[140px] px-4 py-3 text-left">Product ID</th>
-      <th className="w-[100px] px-4 py-3 text-right">Qty</th>
-      <th className="w-[120px] px-4 py-3 text-right">Remaining</th>
-      <th className="w-[100px] px-4 py-3 text-right">Action</th>
-    </tr>
-  </thead>
-
-  <tbody>
-    {transactions.map(tx => (
-      <tr key={tx.transaction_id} className="border-t">
-        <td className="px-4 py-3 text-left whitespace-nowrap">
-          {new Date(tx.date).toLocaleDateString("en-GB")}
-        </td>
-
-        <td className="px-4 py-3 text-left capitalize">
-          {tx.product}
-        </td>
-
-        <td className="px-4 py-3 text-left font-mono">
-          {tx.product_id}
-        </td>
-
-        <td
-          className={`px-4 py-3 text-right font-semibold ${
-            tx.quantity < 0 ? "text-red-600" : "text-green-600"
-          }`}
-        >
-          {tx.quantity}
-        </td>
-
-        <td className="px-4 py-3 text-right">
-          {tx.remaining_product_stock}
-        </td>
-
-        <td className="px-4 py-3 text-right">
-          <button
-            onClick={() => remove(tx.transaction_id)}
-            className="text-red-600 hover:underline"
-          >
-            Delete
-          </button>
-        </td>
-      </tr>
-    ))}
-  </tbody>
-</table>
-
-
-        {/* Infinite scroll loader */}
         {hasMore && (
           <div
             ref={loaderRef}
