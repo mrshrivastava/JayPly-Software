@@ -7,7 +7,7 @@ import React, {
 import api from "../services/api";
 import { CategoryContext } from "../context/CategoryContext";
 
-const LIMIT = 20;
+const LIMIT = 50;
 
 export default function Transactions() {
   const { categories } = useContext(CategoryContext);
@@ -92,7 +92,11 @@ export default function Transactions() {
       if (entries[0].isIntersecting && hasMore) {
         loadTransactions();
       }
-    });
+    },
+    {
+      rootMargin: "200px"
+    }
+    );
 
     if (loaderRef.current) observer.observe(loaderRef.current);
     return () => observer.disconnect();
