@@ -17,17 +17,17 @@ export default function Transactions() {
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  // Filters
+  /* ================= DATE FILTER ================= */
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  // New transaction form
+  /* ================= NEW TRANSACTION ================= */
   const [productType, setProductType] = useState("");
   const [productList, setProductList] = useState([]);
   const [productId, setProductId] = useState("");
   const [quantity, setQuantity] = useState("");
 
-  // Searchable product dropdown
+  /* ================= SEARCHABLE PRODUCT ================= */
   const [productSearch, setProductSearch] = useState("");
   const [showProductList, setShowProductList] = useState(false);
 
@@ -38,7 +38,7 @@ export default function Transactions() {
     if (categories.length && !productType) {
       setProductType(categories[0].id);
     }
-  }, [categories]);
+  }, [categories, productType]);
 
   /* ================= LOAD PRODUCT LIST ================= */
   useEffect(() => {
@@ -59,8 +59,8 @@ export default function Transactions() {
       params: {
         offset: reset ? 0 : offset,
         limit: LIMIT,
-        startDate,
-        endDate,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
       },
     });
 
@@ -78,7 +78,7 @@ export default function Transactions() {
     loadTransactions(true);
   }, []);
 
-  /* ================= DATE FILTER ================= */
+  /* ================= APPLY DATE FILTER ================= */
   const applyDateFilter = () => {
     setTransactions([]);
     setOffset(0);
@@ -88,19 +88,18 @@ export default function Transactions() {
 
   /* ================= INFINITE SCROLL ================= */
   useEffect(() => {
-    const observer = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
-        loadTransactions();
-      }
-    },
-    {
-      rootMargin: "200px"
-    }
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasMore && !loading) {
+          loadTransactions();
+        }
+      },
+      { rootMargin: "200px" }
     );
 
     if (loaderRef.current) observer.observe(loaderRef.current);
     return () => observer.disconnect();
-  }, [hasMore, offset]);
+  }, [hasMore, loading]);
 
   /* ================= ADD TRANSACTION ================= */
   const addTransaction = async () => {
@@ -147,6 +146,8 @@ export default function Transactions() {
 
   return (
     <div className="pt-20 px-4 md:px-6 bg-gray-100 min-h-screen">
+
+      {/* HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
         <h1 className="text-2xl font-bold">Transactions</h1>
 
@@ -168,7 +169,6 @@ export default function Transactions() {
         <h2 className="font-semibold mb-4">New Transaction</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Category */}
           <select
             className="border rounded px-3 py-2"
             value={productType}
@@ -186,7 +186,6 @@ export default function Transactions() {
             ))}
           </select>
 
-          {/* Searchable Product */}
           <div className="relative">
             <input
               type="text"
@@ -232,7 +231,6 @@ export default function Transactions() {
             )}
           </div>
 
-          {/* Quantity */}
           <input
             type="number"
             placeholder="+ / - Quantity"
@@ -249,6 +247,35 @@ export default function Transactions() {
           </button>
         </div>
       </div>
+
+      {/* DATE FILTER */}
+      <div className="bg-white p-6 rounded shadow mb-6">
+        <h2 className="font-semibold mb-4">Filter by Date</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <input
+            type="date"
+            className="border rounded px-3 py-2"
+            value={startDate}
+            onChange={e => setStartDate(e.target.value)}
+          />
+
+          <input
+            type="date"
+            className="border rounded px-3 py-2"
+            value={endDate}
+            onChange={e => setEndDate(e.target.value)}
+          />
+
+          <button
+            onClick={applyDateFilter}
+            className="bg-gray-800 text-white rounded px-4 py-2 hover:bg-gray-900"
+          >
+            Apply
+          </button>
+        </div>
+      </div>
+
 
       {/* TABLE */}
       <div className="bg-white rounded shadow overflow-x-auto">
