@@ -10,7 +10,7 @@ export default function Navbar() {
 
   const logout = () => {
     localStorage.clear();
-    navigate("/login");
+    window.location.href = "/login";
   };
 
   const NavItem = ({ to, label, onClick }) => {

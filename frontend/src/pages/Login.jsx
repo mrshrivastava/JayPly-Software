@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import api from "../services/api";
 import { useNavigate } from "react-router-dom";
 
-export default function Login() {
+export default function Login({ setToken }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,6 +20,7 @@ export default function Login() {
       setError("");
       const res = await api.post("/auth/login", { username, password });
       localStorage.setItem("token", res.data.token);
+      setToken(res.data.token); // 🔥 THIS triggers re-render
       navigate("/");
     } catch (err) {
       setError("Invalid username or password");

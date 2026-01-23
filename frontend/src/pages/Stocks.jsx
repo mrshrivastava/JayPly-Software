@@ -78,6 +78,30 @@ export default function Stocks() {
     load();
   };
 
+
+  const downloadStocks = async () => {
+  try {
+    const res = await api.get("/download/stocks", {
+      responseType: "blob",
+    });
+
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.setAttribute("download", "stocks.xlsx");
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (err) {
+    alert("Failed to download stocks file");
+    console.error(err);
+  }
+};
+
+
   return (
     <div className="pt-20 px-4 md:px-6 bg-gray-100 min-h-screen">
 
@@ -89,12 +113,7 @@ export default function Stocks() {
         </div>
 
         <button
-          onClick={() =>
-            window.open(
-              `${import.meta.env.VITE_API_URL}/download/stocks`,
-              "_blank"
-            )
-          }
+          onClick={downloadStocks}
           className="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-900 w-full sm:w-auto"
         >
           Download Stocks Excel

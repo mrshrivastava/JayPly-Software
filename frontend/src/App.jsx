@@ -1,5 +1,4 @@
-import React from "react";
-
+import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -10,15 +9,23 @@ import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import AddCategory from "./pages/AddCategory";
 
-const PrivateRoute = ({ children }) =>
-  localStorage.getItem("token") ? children : <Navigate to="/login" />;
-
 export default function App() {
+  const [token, setToken] = useState(null);
+
+  useEffect(() => {
+    setToken(localStorage.getItem("token"));
+  }, []);
+
+  const PrivateRoute = ({ children }) =>
+    token ? children : <Navigate to="/login" />;
+
   return (
     <>
-      {localStorage.getItem("token") && <Navbar />}
+      {token && <Navbar />}
+
       <Routes>
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={<Login setToken={setToken} />} />
+
         <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
         <Route path="/stocks/:type" element={<PrivateRoute><Stocks /></PrivateRoute>} />
         <Route path="/transactions" element={<PrivateRoute><Transactions /></PrivateRoute>} />
